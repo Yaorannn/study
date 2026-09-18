@@ -1,0 +1,24 @@
+edition: 3.0.0
+name: fc-sample-matrix-python
+resources:
+  framework:
+    component: fc
+    props:
+      memorySize: 512
+      cpu: 1
+      diskSize: 512
+      timeout: 30
+      concurrencyLimit: 1
+      port: 8080
+      requestType: http
+      runtimeType: customize
+      cloudBuildType: Auto
+      scale:
+        scale_config: 2
+        min: 0
+        max: 2
+      sourceSubDir: "."
+      buildProgramEntry: "python3 -m py_compile index.py"
+      requestEntry: index.handler
+      startCmd: "python3 index.py"
+      requestEntryDescribe: "HTTP and event fixture; expected marker fc-sample-matrix-0918-python."
