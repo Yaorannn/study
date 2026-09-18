@@ -1,7 +1,89 @@
-# FC sample matrix: Python
+# FC Python 示例使用说明
 
-This dependency-free fixture handles HTTP GET/POST and built-in events.
-Successful output includes `ok: true` and marker `fc-sample-matrix-0918-python`.
-The standalone server listens on `0.0.0.0:8080` (or the PORT environment variable).
-Built-in entrypoint: `index.handler`. Custom command: `python3 index.py`.
-Scale configuration is 0 to 2 instances. No credentials or external services are required.
+文档版本：`readme-cn-0918-v1`
+
+本示例使用 Python 标准库提供一个简单的 HTTP 服务，支持 GET 和 POST 请求，并以 JSON 返回请求方法、路径及请求体。可用它检查预置示例选择、构建配置、部署和实际调用流程。无需安装第三方依赖。
+
+## 1. 示例目录
+
+| 文件 | 用途 |
+| --- | --- |
+| `index.py` | HTTP 服务和内置运行时处理入口 |
+| `s.yaml` | 示例资源参数、构建命令和启动配置 |
+| `Procfile` | 自动构建使用的启动声明 |
+| `Dockerfile` | 容器构建参考 |
+| `requirements.txt` | 依赖声明；当前无第三方依赖 |
+| `readme.md` | 当前“使用必读”说明 |
+
+## 2. 创建 HTTP 函数
+
+1. 在函数计算控制台进入“函数管理 → 创建函数”，选择本次验证所用地域。
+2. 请求类型选择“处理 HTTP 请求”，运行环境选择“自定义运行时 → Python 3.10.*”。
+3. 代码上传选择“预置示例代码”，选中关联本仓库 `service` 目录的 Python 示例。
+4. 如选择“自定义构建”，核对下表中的构建命令和启动命令；自动构建则使用模板及 Procfile 提供的配置。
+5. 填写独立的函数名称，检查资源和伸缩参数后创建。
+6. 等待部署完成，再使用函数详情提供的可访问地址验证响应。
+
+| 配置项 | 示例值 |
+| --- | --- |
+| 源码目录 | 本分支的 `service` 目录 |
+| Subdir | `.`，相对于所选 `service` 源码目录 |
+| 自定义构建命令 | `python3 -m py_compile index.py` |
+| 启动命令 | `python3 index.py` |
+| 监听地址 | `0.0.0.0` |
+| 监听端口 | `8080`；设置 `PORT` 环境变量时使用该值 |
+| CPU / 内存 | 1 CPU / 512 MB |
+| 超时 | 30 秒 |
+| 最小 / 最大实例数 | 0 / 2 |
+
+选择示例后请核对表单中的语言、构建方式和命令。部署成功后仍需实际调用，才能确认服务响应符合预期。
+
+## 3. HTTP 调用示例
+
+将下面的 `<FUNCTION_URL>` 替换为函数详情中当前网络可访问的调用地址。
+
+```bash
+curl "<FUNCTION_URL>/"
+```
+
+使用独立 HTTP 服务启动方式时，GET `/` 的预期响应为：
+
+```json
+{
+  "ok": true,
+  "marker": "fc-sample-matrix-0918-python",
+  "method": "GET",
+  "path": "/",
+  "body": ""
+}
+```
+
+POST 请求示例：
+
+```bash
+curl -X POST "<FUNCTION_URL>/echo" -H "Content-Type: application/json" -d '{"message":"hello-fc"}'
+```
+
+响应中的 `method` 应为 `POST`，`path` 应为 `/echo`，`body` 为收到的请求体字符串；所有正常响应都包含 `ok: true` 和标记 `fc-sample-matrix-0918-python`。
+
+## 4. 本地查看
+
+进入 `service` 目录后启动：
+
+```bash
+python3 index.py
+```
+
+再打开 `http://127.0.0.1:8080/` 查看 JSON 响应。结束验证时停止该进程。
+
+## 5. 内置运行时入口
+
+代码同时提供 `index.handler` 入口，可处理代码中实现的内置 HTTP 适配和事件输入。事件路径返回 `ok`、`marker`、`event` 字段；具体调用协议以目标环境的运行时要求为准。
+
+本说明的创建步骤以自定义 HTTP 运行时为例，不表示所有运行时、事件类型或构建组合都已通过环境验证。
+
+## 6. 如何更新“使用必读”
+
+在管理端将示例的 GitHub 源码地址指向本分支的 `service` 目录，并在该目录维护当前小写文件名 `readme.md`。当前环境的示例接口会生成对应文档链接。
+
+修改说明后提交到同一分支，再重新进入创建函数页面获取示例列表、点击“使用必读”查看。文档内容已更新与控制台成功加载文档是两个独立检查项；若抽屉空白，可先直接打开仓库中的本文件核对内容。
